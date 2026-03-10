@@ -783,7 +783,9 @@
                 this.bestScoreElement.textContent = this.bestScore;
 
                 if (this.gameOver && !this.paused) {
-                    this.messageText.textContent = this.won ? '🎉 你赢了!' : '😢 游戏结束!';
+                    this.messageText.textContent = this.won 
+                        ? '🎉 恭喜过关！可以找楠哥领取红包，口令：2048DAWIN' 
+                        : '😢 游戏结束!';
                     this.messageElement.classList.add('active');
                     document.getElementById('continue-btn').style.display = this.won ? 'inline-block' : 'none';
                     this.playSound(this.won ? 'win' : 'gameover');
