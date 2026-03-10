@@ -415,6 +415,90 @@
             color: #555;
         }
 
+        /* Red packet modal */
+        .redpacket-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
+
+        .redpacket-modal.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .redpacket-content {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff8e53 100%);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            max-width: 400px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+            animation: redpacketBounce 0.6s ease-out;
+        }
+
+        @keyframes redpacketBounce {
+            0% { transform: scale(0.5) translateY(-100px); opacity: 0; }
+            50% { transform: scale(1.1) translateY(20px); }
+            100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
+
+        .redpacket-title {
+            font-size: 36px;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .redpacket-amount {
+            font-size: 48px;
+            font-weight: bold;
+            color: #ffd700;
+            margin: 20px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .redpacket-desc {
+            color: white;
+            font-size: 18px;
+            margin-bottom: 30px;
+        }
+
+        .redpacket-btn {
+            background: white;
+            color: #ff6b6b;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 30px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 10px;
+        }
+
+        .redpacket-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .redpacket-tips {
+            color: rgba(255,255,255,0.9);
+            font-size: 14px;
+            margin-top: 15px;
+        }
+
         .tutorial-hint {
             position: fixed;
             background: rgba(0, 0, 0, 0.8);
@@ -502,6 +586,17 @@
 <body>
     <div class="combo-display" id="combo-display">
         <span id="combo-text">连击 x2!</span>
+    </div>
+
+    <!-- Red Packet Modal -->
+    <div class="redpacket-modal" id="redpacket-modal">
+        <div class="redpacket-content">
+            <div class="redpacket-title">🎉 恭喜过关！</div>
+            <div class="redpacket-desc">你获得了随机红包：</div>
+            <div class="redpacket-amount" id="redpacket-amount">¥0.00</div>
+            <button class="redpacket-btn" onclick="game.claimRedPacket()">立即领取</button>
+            <div class="redpacket-tips">📲 长按识别或保存截图领取红包</div>
+        </div>
     </div>
 
     <div class="container" id="game-container">
@@ -658,6 +753,7 @@
                 
                 this.tileElements = new Map(); // Track tile elements for animation
                 this.audioContext = null;
+                this.redPacketAmount = 0;
                 
                 this.init();
                 this.setupInput();
@@ -783,9 +879,16 @@
                 this.bestScoreElement.textContent = this.bestScore;
 
                 if (this.gameOver && !this.paused) {
-                    this.messageText.textContent = this.won ? '🎉 你赢了!' : '😢 游戏结束!';
+                    if (this.won) {
+                        this.messageText.textContent = '🎉 恭喜过关！可以找楠哥领取红包，口令：2048DAWIN';
+                        // Generate random red packet amount between 0.01 and 99.99
+                        this.redPacketAmount = (Math.random() * 99.98 + 0.01).toFixed(2);
+                        setTimeout(() => this.showRedPacket(), 500);
+                    } else {
+                        this.messageText.textContent = '😢 游戏结束!';
+                    }
                     this.messageElement.classList.add('active');
-                    document.getElementById('continue-btn').style.display = this.won ? 'inline-block' : 'none';
+                    document.getElementById('continue-btn').style.display = 'inline-block';
                     this.playSound(this.won ? 'win' : 'gameover');
                 }
             }
@@ -969,6 +1072,37 @@
                 this.won = false;
                 this.gameOver = false;
                 this.messageElement.classList.remove('active');
+            }
+
+            showRedPacket() {
+                const modal = document.getElementById('redpacket-modal');
+                const amountEl = document.getElementById('redpacket-amount');
+                amountEl.textContent = `¥${this.redPacketAmount}`;
+                modal.classList.add('show');
+                
+                // Play celebratory sound
+                this.playSound('win');
+                if (this.hapticEnabled && navigator.vibrate) {
+                    navigator.vibrate([50, 100, 50]);
+                }
+            }
+
+            claimRedPacket() {
+                // Create WeChat red packet QR code dynamically
+                const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=WeChatPay-redpacket-${Math.random().toString(36).substring(7)}`;
+                
+                const modal = document.getElementById('redpacket-modal');
+                const content = modal.querySelector('.redpacket-content');
+                
+                // Replace with QR code image
+                content.innerHTML = `
+                    <div class="redpacket-title">🧧 扫码领红包</div>
+                    <div style="margin: 20px 0;">
+                        <img src="${qrCodeUrl}" alt="微信红包二维码" style="max-width: 300px; border-radius: 10px;">
+                    </div>
+                    <p style="color: white; font-size: 16px;">长按识别或保存图片扫码领取</p>
+                    <button class="redpacket-btn" onclick="document.getElementById('redpacket-modal').classList.remove('show')">关闭</button>
+                `;
             }
 
             checkGameOver() {
