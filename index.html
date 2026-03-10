@@ -777,6 +777,18 @@
                 this.pauseOverlay.classList.remove('active');
                 this.gameContainer.classList.remove('paused');
                 
+                // Initialize audio context on first interaction
+                if (this.soundEnabled && !this.audioContext) {
+                    try {
+                        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                        if (this.audioContext.state === 'suspended') {
+                            this.audioContext.resume();
+                        }
+                    } catch (e) {
+                        console.log('Audio not supported');
+                    }
+                }
+                
                 // Generate initial tiles based on difficulty
                 const initialTiles = this.getTilesToGenerate();
                 for (let i = 0; i < initialTiles; i++) {
@@ -1200,8 +1212,14 @@
                 if (!this.soundEnabled) return;
                 
                 try {
+                    // Initialize audio context on first user interaction
                     if (!this.audioContext) {
                         this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    }
+                    
+                    // Resume audio context if it's suspended (browser autoplay policy)
+                    if (this.audioContext.state === 'suspended') {
+                        this.audioContext.resume();
                     }
                     
                     const oscillator = this.audioContext.createOscillator();
@@ -1232,6 +1250,43 @@
                 } catch (e) {
                     console.log('Audio not supported');
                 }
+            }
+
+            init() {
+                this.grid = Array(this.size).fill(null).map(() => Array(this.size).fill(0));
+                this.score = 0;
+                this.gameOver = false;
+                this.won = false;
+                this.paused = false;
+                this.history = [];
+                this.combo = 0;
+                this.tilesMoved = 0;
+                this.tilesMerged = 0;
+                this.tileElements.clear();
+                this.messageElement.classList.remove('active');
+                this.pauseOverlay.classList.remove('active');
+                this.gameContainer.classList.remove('paused');
+                
+                // Initialize audio context on first interaction
+                if (this.soundEnabled && !this.audioContext) {
+                    try {
+                        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                        if (this.audioContext.state === 'suspended') {
+                            this.audioContext.resume();
+                        }
+                    } catch (e) {
+                        console.log('Audio not supported');
+                    }
+                }
+                
+                // Generate initial tiles based on difficulty
+                const initialTiles = this.getTilesToGenerate();
+                for (let i = 0; i < initialTiles; i++) {
+                    this.addRandomTile();
+                }
+                
+                this.updateView();
+                this.updateCombo();
             }
 
             showTutorial() {
