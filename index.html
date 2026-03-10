@@ -881,8 +881,8 @@
                 if (this.gameOver && !this.paused) {
                     if (this.won) {
                         this.messageText.textContent = '🎉 恭喜过关！可以找楠哥领取红包，口令：2048DAWIN';
-                        // Generate random red packet amount between 0.01 and 99.99
-                        this.redPacketAmount = (Math.random() * 99.98 + 0.01).toFixed(2);
+                        // Generate random red packet amount between 0.01 and 0.99
+                        this.redPacketAmount = (Math.random() * 0.98 + 0.01).toFixed(2);
                         setTimeout(() => this.showRedPacket(), 500);
                     } else {
                         this.messageText.textContent = '😢 游戏结束!';
